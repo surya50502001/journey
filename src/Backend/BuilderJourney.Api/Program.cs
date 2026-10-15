@@ -7,6 +7,7 @@ using BuilderJourney.Infrastructure;
 using BuilderJourney.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://localhost:5000");
 
 // Add Controllers
 builder.Services.AddControllers()
