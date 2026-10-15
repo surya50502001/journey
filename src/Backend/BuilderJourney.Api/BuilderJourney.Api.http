@@ -1,0 +1,6 @@
+@BuilderJourney.Api_HostAddress = http://localhost:5189
+
+GET {{BuilderJourney.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

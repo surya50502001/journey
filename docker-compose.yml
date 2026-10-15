@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: builderjourney_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: builderjourney
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: builderjourney_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DatabaseProvider=PostgreSql
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=builderjourney;Username=postgres;Password=postgrespassword
+      - Jwt__Secret=BuilderJourneyPlatformSuperSecureSecretKeyThatIsAtLeast32BytesLong!
+      - Jwt__Issuer=BuilderJourneyPlatform
+      - Jwt__Audience=BuilderJourneyPlatformAudience
+      - Security__EncryptionKey=BuilderJourneyPlatformSecureTokenEncryptionKey2026!
+      - X__BearerToken=${X_BEARER_TOKEN:-}
+    ports:
+      - "5000:5000"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: builderjourney_web
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:

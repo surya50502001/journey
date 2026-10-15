@@ -1,0 +1,25 @@
+# Build Stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY src/Backend/BuilderJourney.sln ./
+COPY src/Backend/BuilderJourney.Domain/BuilderJourney.Domain.csproj BuilderJourney.Domain/
+COPY src/Backend/BuilderJourney.Application/BuilderJourney.Application.csproj BuilderJourney.Application/
+COPY src/Backend/BuilderJourney.Infrastructure/BuilderJourney.Infrastructure.csproj BuilderJourney.Infrastructure/
+COPY src/Backend/BuilderJourney.Api/BuilderJourney.Api.csproj BuilderJourney.Api/
+COPY src/Backend/BuilderJourney.Tests/BuilderJourney.Tests.csproj BuilderJourney.Tests/
+
+RUN dotnet restore BuilderJourney.sln
+
+COPY src/Backend/ ./
+RUN dotnet publish BuilderJourney.Api/BuilderJourney.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime Stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 5000
+
+ENTRYPOINT ["dotnet", "BuilderJourney.Api.dll"]
